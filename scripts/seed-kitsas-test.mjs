@@ -2,7 +2,7 @@
  * Seeds the configured Kitsas TEST book with a realistic association year.
  *
  * This is a development utility, not part of the app: it uses the documented
- * Hub upload (POST /v1/vouchers) so Budu's own read-only client stays read-only.
+ * Hub upload (POST /v1/vouchers) so Tukki's own read-only client stays read-only.
  * It refuses to run against api.kitsas.fi.
  *
  *   node --env-file=.env.local scripts/seed-kitsas-test.mjs
@@ -366,7 +366,7 @@ const cloudLogin = await (
     body: JSON.stringify({
       email: process.env.KITSAS_HUB_USERNAME,
       password: process.env.KITSAS_HUB_PASSWORD,
-      application: 'Budu',
+      application: 'Tukki',
     }),
   })
 ).json();

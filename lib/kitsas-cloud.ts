@@ -39,7 +39,7 @@ async function loginToCloud(): Promise<KitsasCloud> {
   const response = await fetch(`${kitsasHubUrl()}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ email, password, application: 'Budu' }),
+    body: JSON.stringify({ email, password, application: 'Tukki' }),
     cache: 'no-store',
   });
   if (!response.ok) throw new Error(`Kitsaaseen kirjautuminen epäonnistui (${response.status}).`);

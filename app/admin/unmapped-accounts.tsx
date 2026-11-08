@@ -13,7 +13,7 @@ export type UnmappedAccount = {
  * rest, which makes a talousarvio written against a different chart of accounts
  * fail in the worst possible way: no error, every sync green, and a dashboard
  * missing most of the year. This panel is the counter-evidence. It is the only
- * place in Budu where money Kitsas holds but Budu does not show is visible at
+ * place in Tukki where money Kitsas holds but Tukki does not show is visible at
  * all, so it leads with the totals rather than the list.
  */
 export function UnmappedAccounts({ accounts, currency }: { accounts: UnmappedAccount[]; currency: string }) {

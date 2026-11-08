@@ -5,7 +5,7 @@ import { activeFirst } from '@/lib/budget-period';
 export { activeFirst, coversToday, type BudgetPeriod } from '@/lib/budget-period';
 
 /**
- * Budu shows one talousarvio at a time, and every signed-in user sees that same
+ * Tukki shows one talousarvio at a time, and every signed-in user sees that same
  * one. Nothing here scopes by user: sign-in is already restricted to the
  * organisation's Google Workspace domain, so a valid session *is* the
  * membership check. Scoping reads by importer only had the effect of hiding the

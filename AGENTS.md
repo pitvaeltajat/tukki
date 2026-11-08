@@ -32,7 +32,7 @@ git add -A && git commit && git push origin HEAD:main
 
 Do not leave the tree dirty for someone else to figure out.
 
-Write the commit message the way the log already reads: one imperative sentence saying what changed for the user, no scope prefix, no bullet list. "Flag overspending rows and put BUDU in the header", not "feat(dashboard): add overspend flags".
+Write the commit message the way the log already reads: one imperative sentence saying what changed for the user, no scope prefix, no bullet list. "Flag overspending rows and put TUKKI in the header", not "feat(dashboard): add overspend flags".
 
 Pushing to `main` deploys: Vercel builds every push, and `vercel.json` runs the Kitsas sync crons against production. So the checks are not a formality — a red push is a broken deploy.
 
@@ -68,7 +68,7 @@ Table names are quoted because Prisma keeps its model casing; unquoted `kitsasen
 
 ## Rules for touching that database
 
-- **5432 and 5433 on that host are Klapi's**, a different production application. Only 5434 is Budu. Never point a command at the others, and never try credentials against them to find out which is which.
+- **5432 and 5433 on that host are Klapi's**, a different production application. Only 5434 is Tukki. Never point a command at the others, and never try credentials against them to find out which is which.
 - `KitsasEntry`, `KitsasVoucherState` and `SyncRun` are all derived — a sync rebuilds them from Kitsas. `Budget` and `BudgetLine` are the imported talousarviot and the only rows in the database that cannot be recovered by re-running anything. Do not delete them.
 - Deleting a budget's `SyncRun` rows is what puts the dashboard back into its pending state, so it fetches immediately instead of rendering zeroes. Clearing entries without clearing sync runs leaves it confidently showing nothing.
 - `KitsasEntry.syncedAt` records which run wrote each row, which is the reliable way to tell one book's data from another's after a configuration change. Prefer it to guessing from dates or descriptions.

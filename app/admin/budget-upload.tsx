@@ -50,7 +50,7 @@ export function BudgetUpload({ replacing }: { replacing: string | null }) {
             kunnes poistat sen.
           </>
         ) : (
-          'Tiedostosta luetaan ensimmäinen välilehti. Budu tunnistaa sekä tavallisen talousarviopohjan että yksinkertaisen category/planned-muodon.'
+          'Tiedostosta luetaan ensimmäinen välilehti. Tukki tunnistaa sekä tavallisen talousarviopohjan että yksinkertaisen category/planned-muodon.'
         )}
       </p>
       <div className="form-row">

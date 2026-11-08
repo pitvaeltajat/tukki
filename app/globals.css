@@ -787,7 +787,7 @@ select:focus-visible {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-@keyframes budu-pulse {
+@keyframes tukki-pulse {
   0%,
   100% {
     opacity: 0.45;
@@ -802,7 +802,7 @@ select:focus-visible {
   height: 12px;
   border-radius: 3px;
   background: var(--muted);
-  animation: budu-pulse 1.4s ease-in-out infinite;
+  animation: tukki-pulse 1.4s ease-in-out infinite;
   vertical-align: middle;
 }
 .skeleton-wide {
@@ -817,10 +817,10 @@ select:focus-visible {
   border: 2px solid var(--border);
   border-top-color: var(--primary);
   border-radius: 50%;
-  animation: budu-spin 0.8s linear infinite;
+  animation: tukki-spin 0.8s linear infinite;
   vertical-align: -1px;
 }
-@keyframes budu-spin {
+@keyframes tukki-spin {
   to {
     transform: rotate(360deg);
   }

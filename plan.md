@@ -1,6 +1,6 @@
 # Plan: writing kirjanpito events into Kitsas
 
-Budu reads Kitsas today. This is the plan for making it write, once the association has production Kitsas access.
+Tukki reads Kitsas today. This is the plan for making it write, once the association has production Kitsas access.
 Nothing here has been built. Everything marked **verified** was checked against the production API description at
 `https://api.kitsas.fi/api-json` and the `kitsas-library@0.1.56` sources on 2026-08-26. Everything marked **open** needs
 a look at the Holvi settings or a decision from the person who does the kirjanpito.
@@ -16,7 +16,7 @@ that remains the point of the plan — but the questions that only the real book
 2. **Build kululaskut.fi → Kitsas.** That is where the value is, it is the source we control, and nobody else is
    selling it.
 3. Post as **drafts, never as booked entries**, with a Kitsas service account whose rights make booking impossible.
-4. Idempotency lives in Budu's own database, not in hope.
+4. Idempotency lives in Tukki's own database, not in hope.
 
 ## 1. Holvi is already connected, and that is the constraint
 
@@ -27,10 +27,10 @@ categories — mapping Holvi accounts and cards to kirjanpitotilit by **IBAN**, 
 through the `Tilinumero` field under Holvi's `Kirjanpito > Luokat`.
 
 So there is nothing to build for Holvi, and the Holvi API question is closed: it does not matter that Holvi has no
-usable API for us, because Kitsas already has the connection and Budu's read sync picks up the result with no new code.
+usable API for us, because Kitsas already has the connection and Tukki's read sync picks up the result with no new code.
 
 **What it does mean is that the expense account is already occupied.** A kulukorvaus paid from the Holvi account is
-_already_ a Holvi transaction, and the addon already books it. If Budu also posts the claim from kululaskut.fi as an
+_already_ a Holvi transaction, and the addon already books it. If Tukki also posts the claim from kululaskut.fi as an
 expense, the same euro lands in the books twice. This is the central design constraint of the whole project, and it has
 exactly one rule:
 
@@ -44,11 +44,11 @@ Two ways to satisfy it.
   **payable account** instead of an expense account. The book has one: **2960 Ostovelat**, with 2990 Siirtovelat as the
   alternative. (An earlier draft of this plan guessed 2870; in this book that number is "Velat saman konsernin
   yrityksille", which is not it.)
-- Budu posts each approved claim as `BILLOFCOSTS`: entries on the real expense accounts, and
+- Tukki posts each approved claim as `BILLOFCOSTS`: entries on the real expense accounts, and
   `contraEntry: { account: <that same payable>, newBalanceItem: true }`, which opens a tase-erä.
 - The Holvi payment then arrives against the payable and closes the erä. The expense is booked on the claim's own date,
   split across the accounts the claim actually itemises; the bank line is just money moving.
-- This is what the expense account split is for. Budu's dashboard compares realized spending per talousarvio row, and a
+- This is what the expense account split is for. Tukki's dashboard compares realized spending per talousarvio row, and a
   lump "Kulukorvaukset" transfer tells it nothing — the itemisation only exists in kululaskut.fi.
 - Costs: someone sets that one mapping in Holvi and uses the category consistently, and a single Holvi transfer that
   covers several claims has to reconcile against several tase-erät.
@@ -72,7 +72,7 @@ Holvi's `Kirjanpito > Luokat`, not in the Kitsas API.
 
 ### Two operational facts about the addon
 
-- **It is manual.** Someone picks a date range and presses `Tallenna kirjanpitoon`; there is no cron and Budu cannot
+- **It is manual.** Someone picks a date range and presses `Tallenna kirjanpitoon`; there is no cron and Tukki cannot
   trigger it. So the two sources will not be in step, and the tase-erä in option A may sit open for a while. That is
   fine — it is what a payable is — but it means "the dashboard is missing money" will usually mean "nobody has fetched
   Holvi lately", and that is worth saying on screen rather than making people guess.
@@ -88,7 +88,7 @@ using it, but its shape — one import voucher per claim — is the precedent ou
 ### What Kitsas offers (verified)
 
 Three write endpoints exist in **production**, all bearer-authenticated, all already wrapped by `kitsas-library`, which
-Budu depends on for `lib/kitsas-hub.ts`:
+Tukki depends on for `lib/kitsas-hub.ts`:
 
 | Endpoint                | Library call                                          | Use                              |
 | ----------------------- | ----------------------------------------------------- | -------------------------------- |
@@ -109,9 +109,9 @@ Budu depends on for `lib/kitsas-hub.ts`:
 The Kitsas rights model has **separate rights for drafting and saving**: `Tl` (Draft) and `Tt` (Save), plus circulation
 rights `Kl` (CircleAdd), `Kt` (CircleCheck), `Kh` (CircleAccept). So:
 
-- Create a **dedicated Kitsas user for Budu**, invited to the book with drafting rights and no saving right.
-- Budu then _physically cannot_ write to the ledger. The guarantee is enforced by Kitsas's permission system, not by a
-  comment in our source. Everything Budu posts waits for a human in Kitsas.
+- Create a **dedicated Kitsas user for Tukki**, invited to the book with drafting rights and no saving right.
+- Tukki then _physically cannot_ write to the ledger. The guarantee is enforced by Kitsas's permission system, not by a
+  comment in our source. Everything Tukki posts waits for a human in Kitsas.
 - Post with `status: DRAFT` to start with. `RECEIVED` puts claims into Kitsas's own kierto (approval circulation) if we
   later decide claims should be approved inside Kitsas rather than in kululaskut.fi. `BOOKED` is not on the table.
 - **The service account must not have two-factor authentication.** `POST /v1/login` answers 401 with "two factor
@@ -147,7 +147,7 @@ both sources book the expense.
 
 ### Images stay in kululaskut.fi
 
-Decided: Budu does **not** upload receipt images. `saveVoucher` takes multipart attachments and we could, but the images
+Decided: Tukki does **not** upload receipt images. `saveVoucher` takes multipart attachments and we could, but the images
 already live in kululaskut.fi and duplicating them buys little.
 
 Instead, put a backlink to the claim into the voucher, and store the returned Kitsas voucher id back in kululaskut.fi so
@@ -163,7 +163,7 @@ Two things to settle before this is final:
   books, and kirjanpitolaki expects tositteet to be retained with the accounts for six years. A URL into a third-party
   service is not the same guarantee as a file in the book. If the kirjanpitäjä or tilintarkastaja wants the images in
   Kitsas, switching is a small change — `saveVoucher` already takes the attachments — but kululaskut.fi would then need
-  to serve the bytes to Budu, not just a link. Ask before the first production run.
+  to serve the bytes to Tukki, not just a link. Ask before the first production run.
 
 ### Data out of kululaskut.fi
 
@@ -185,7 +185,7 @@ If a claim can be edited after approval, we need an edit policy — Kitsas has n
 changed claim means a correcting voucher or a manual fix. Simplest first version: **export only approved claims, and
 treat approval as final.**
 
-### Changes inside Budu
+### Changes inside Tukki
 
 - **`lib/kitsas-write.ts`**, new, on the Hub API via `kitsas-library`. Keep `lib/kitsas.ts` literally GET-only so the
   "Kitsas safety contract" section of `README.md` stays true; rewrite that section to describe two credentials and two
@@ -209,7 +209,7 @@ treat approval as final.**
   Written as `POSTING` _before_ the POST, so a request that times out after Kitsas committed does not double-book on
   retry. Reconciled afterwards against the read sync, which will see the new voucher on its next run.
 
-- **Account mapping**, kululaskut.fi category → Kitsas account number. Both halves already exist in Budu:
+- **Account mapping**, kululaskut.fi category → Kitsas account number. Both halves already exist in Tukki:
   `discoverKitsasHub` reads the account catalogue, and `BudgetLine.kitsasAccount` already ties accounts to budget rows.
   Admin-editable on `/admin`, next to the existing meno/tulo reclassification.
 - **A staging step on `/admin`**: import → proposed vouchers with the mapping applied → an admin approves → post. Not
@@ -235,7 +235,7 @@ claim to the test book, wait for a sync, check the number moved.
 | The kirjanpitäjä         | Sign-off on option A; whether images may stay outside the books                                        |
 | kululaskut.fi            | Stable claim ids; whether approval is final                                                            |
 
-Everything else can be developed now against `test-api.kitsas.fi`, which Budu already supports through
+Everything else can be developed now against `test-api.kitsas.fi`, which Tukki already supports through
 `KITSAS_HUB_URL`, and against `MockKitsasBook` for the write calls.
 
 ## 4. Order of work
@@ -245,15 +245,15 @@ Everything else can be developed now against `test-api.kitsas.fi`, which Budu al
    same expense lands in the books twice. If the answer is that the current mapping is already good enough, stop here —
    that is option B and it is a legitimate outcome.
 2. kululaskut.fi export endpoint + shared secret.
-3. Budu: `PostedVoucher`, the mapping table, the admin mapping UI.
-4. Budu: `lib/kitsas-write.ts` against the mock, then against the test book.
+3. Tukki: `PostedVoucher`, the mapping table, the admin mapping UI.
+4. Tukki: `lib/kitsas-write.ts` against the mock, then against the test book.
 5. Staging UI on `/admin`, then one real claim posted as a draft to production, checked by hand in Kitsas — including
    that its tase-erä closes against the Holvi payment when that month is fetched.
 6. Backfill, in one batch, watched.
 
 ## 5. Considered and rejected: paying the claims from a button
 
-The tempting next step is for kululaskut.fi (or Budu) to pay an approved claim out of Holvi directly. Written down here
+The tempting next step is for kululaskut.fi (or Tukki) to pay an approved claim out of Holvi directly. Written down here
 so it does not get re-litigated.
 
 **The blocker is a licence, not access.** Holvi's third-party interface is PSD2
@@ -276,6 +276,6 @@ no licence, no stored credentials, and the treasurer stays the person who moves 
 reference and arkistointitunnus, which is exactly what would close the tase-erä in option A automatically instead of
 someone matching it by hand in Kitsas. A batch file gives that just as well as PIS does.
 
-**The argument against is not regulatory.** Budu's worst case today is a wrong number on a dashboard or a bad draft
+**The argument against is not regulatory.** Tukki's worst case today is a wrong number on a dashboard or a bad draft
 voucher, both recoverable. A one-click payer turns a compromised Google account into stolen funds, in an organisation
 whose treasurer changes every year or two, and where outgoing money is supposed to have two-person control.

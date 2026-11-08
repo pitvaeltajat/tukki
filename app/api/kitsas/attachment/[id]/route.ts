@@ -22,7 +22,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
    * Only serve attachments a stored booking actually references. Without this
    * the route would be an open reader of every attachment in the book, since
    * the ids are small sequential integers. The book is shared across the
-   * organisation, so the check is that the file belongs to a booking Budu has
+   * organisation, so the check is that the file belongs to a booking Tukki has
    * imported — not that the viewer imported it.
    */
   const referenced = await prisma.kitsasEntry.findFirst({

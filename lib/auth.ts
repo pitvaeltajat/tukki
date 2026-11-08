@@ -16,8 +16,8 @@ declare module 'next-auth' {
 // next-auth depends on. Klapi carries the same dependency for the same reason.
 declare module '@auth/core/jwt' {
   interface JWT {
-    /** Budu's own User.id — namespaced, because the cookie is shared with Klapi. */
-    buduUserId?: string;
+    /** Tukki's own User.id — namespaced, because the cookie is shared with Klapi. */
+    tukkiUserId?: string;
     /** Google's verified hosted domain, or null for a personal account. */
     hd?: string | null;
   }
@@ -39,7 +39,7 @@ const hdHint = allowedDomains.length === 1 ? allowedDomains[0] : allowedDomains.
 
 /**
  * The parent domain the session cookie is pinned to, e.g. `.pitva.fi`. Setting
- * it is what makes one sign-in cover Budu and Klapi both.
+ * it is what makes one sign-in cover Tukki and Klapi both.
  *
  * Two things must match Klapi exactly or neither app can read the other's
  * cookie, and both fail silently:
@@ -57,10 +57,10 @@ const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
  * Whether an account is inside the Workspace domain fence, judged from the
  * `hd` claim recorded at sign-in.
  *
- * This exists because `signIn` below is no longer the only way into a Budu
+ * This exists because `signIn` below is no longer the only way into a Tukki
  * session. With the cookie shared across pitva.fi, a person can sign in on
  * Klapi — which deliberately admits pre-Workspace personal Gmail accounts —
- * and arrive here holding a valid session that Budu's own `signIn` never
+ * and arrive here holding a valid session that Tukki's own `signIn` never
  * judged. So the fence is re-checked on every read instead of once at the
  * door.
  *
@@ -80,12 +80,15 @@ function isInsideDomainFence(hd: unknown): boolean {
  *
  * Two independent gates, both of which must hold. `NODE_ENV` is fixed to
  * `production` by `next build`, so a deploy cannot reach this branch whatever
- * the environment says; `BUDU_DEV_LOGIN` then means a developer has to ask for
+ * the environment says; `TUKKI_DEV_LOGIN` then means a developer has to ask for
  * it by name even in development. The provider is absent from `providers` when
  * either gate fails, so its route does not exist rather than existing and
  * refusing — there is no endpoint to probe.
  */
-export const devLoginEnabled = process.env.NODE_ENV !== 'production' && process.env.BUDU_DEV_LOGIN === '1';
+// TUKKI_ is the name; BUDU_ is still read so a deploy survives until the Vercel
+// env var is renamed, the same way Klapi-compatible names are accepted elsewhere.
+export const devLoginEnabled =
+  process.env.NODE_ENV !== 'production' && (process.env.TUKKI_DEV_LOGIN ?? process.env.BUDU_DEV_LOGIN) === '1';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   /** A rejected sign-in lands back on the login page, which explains the domain rule in Finnish. */
@@ -98,7 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ? {
         cookies: {
           sessionToken: {
-            // Deliberately NOT the Auth.js default name. Klapi and Budu
+            // Deliberately NOT the Auth.js default name. Klapi and Tukki
             // already had host-scoped cookies called
             // `__Secure-authjs.session-token`; reusing it for the
             // domain-scoped one left every existing user holding two cookies
@@ -191,22 +194,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hd = typeof profile?.hd === 'string' ? profile.hd.trim().toLowerCase() : null;
       }
 
-      // Budu's own User.id, namespaced: the cookie is shared with Klapi, which
+      // Tukki's own User.id, namespaced: the cookie is shared with Klapi, which
       // keeps its users in a different database. A bare `userId` claim had the
       // two apps overwriting each other's primary keys on every request.
       if (token.email) {
-        token.buduUserId = (await prisma.user.findUnique({ where: { email: token.email } }))?.id;
+        token.tukkiUserId = (await prisma.user.findUnique({ where: { email: token.email } }))?.id;
       }
       return token;
     },
     async session({ session, token }) {
       // Identity is shared across pitva.fi; entitlement is not. A session
-      // minted by Klapi is proof of who someone is, never proof that Budu
+      // minted by Klapi is proof of who someone is, never proof that Tukki
       // should admit them — Klapi admits pre-Workspace personal Gmail accounts
       // that this domain fence exists to keep out. Leaving `user.id` unset is
       // what makes `adminSession()` and every caller of it deny.
       if (!isInsideDomainFence(token.hd)) return session;
-      if (session.user && typeof token.buduUserId === 'string') session.user.id = token.buduUserId;
+      if (session.user && typeof token.tukkiUserId === 'string') session.user.id = token.tukkiUserId;
       return session;
     },
   },
@@ -217,12 +220,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
  * is open to everyone who can sign in, so this is the only gate left standing
  * on the write paths: import, edit and delete.
  *
- * An empty list leaves every signed-in user an admin, which is what Budu did
+ * An empty list leaves every signed-in user an admin, which is what Tukki did
  * before the list existed. That is not "open to anyone": `signIn` above already
  * turns away every account outside `GOOGLE_WORKSPACE_DOMAIN`, so the widest
  * this setting can get is the organisation itself.
  */
-const adminEmails = (process.env.BUDU_ADMIN_EMAILS ?? '')
+const adminEmails = (process.env.TUKKI_ADMIN_EMAILS ?? process.env.BUDU_ADMIN_EMAILS ?? '')
   .split(',')
   .map((entry) => entry.trim().toLowerCase())
   .filter(Boolean);

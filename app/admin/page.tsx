@@ -36,7 +36,7 @@ export default async function AdminPage({
           <div className="brand-group">
             <Link className="brand" href="/">
               <PitvaMark />
-              BUDU
+              TUKKI
             </Link>
             <AtkLink />
           </div>
@@ -104,7 +104,7 @@ export default async function AdminPage({
       <p className="eyebrow">Ylläpito</p>
       <h1>Talousarvion hallinta</h1>
       {selected && <PeriodSwitcher periods={periods} selectedId={selected.id} basePath="/admin" />}
-      <p className="lede">Muutokset näkyvät heti kaikille yhdistyksen tunnuksille, jotka kirjautuvat Buduun.</p>
+      <p className="lede">Muutokset näkyvät heti kaikille yhdistyksen tunnuksille, jotka kirjautuvat Tukkiin.</p>
 
       {selected ? (
         <BudgetEditor

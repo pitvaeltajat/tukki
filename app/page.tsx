@@ -99,7 +99,7 @@ export default async function Home({
           <div className="brand-group">
             <Link className="brand" href="/">
               <PitvaMark />
-              BUDU
+              TUKKI
             </Link>
             <AtkLink />
           </div>
@@ -177,7 +177,7 @@ function Setup({ admin }: { admin: boolean }) {
       <p className="eyebrow">Aloita tästä</p>
       <h1>Tuo ensimmäinen talousarvio.</h1>
       <p className="lede">
-        Lähetä talousarvio CSV- tai Excel-tiedostona. Budu säilyttää suunnitelman erillään Kitsaasta luetuista
+        Lähetä talousarvio CSV- tai Excel-tiedostona. Tukki säilyttää suunnitelman erillään Kitsaasta luetuista
         toteutuneista kuluista.
       </p>
       <div className="card">
@@ -363,7 +363,7 @@ function Dashboard({
     .filter((row) => row.amountCents > 0);
   /**
    * The newest booking Kitsas actually holds, which is not the same thing as
-   * when Budu last fetched. The Holvi import into Kitsas is run by hand, so the
+   * when Tukki last fetched. The Holvi import into Kitsas is run by hand, so the
    * book itself can be months behind while every sync reports success — and a
    * dashboard that only says when it fetched makes that look like underspending.
    */

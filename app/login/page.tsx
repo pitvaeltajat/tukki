@@ -13,13 +13,13 @@ const domain = allowedDomains[0] ?? 'pitkajarvenvaeltajat.fi';
 function noticeFor(error: string | undefined) {
   if (!error) return null;
   if (error === 'AccessDenied')
-    return `Tuo tili ei ole PitVan tili. Budu päästää sisään vain @${domain}-osoitteella. Henkilökohtainen Gmail ei kelpaa. Vaihda tiliä ja yritä uudelleen, tai pyydä lippukunnan osoitetta pestijohtajalta.`;
+    return `Tuo tili ei ole PitVan tili. Tukki päästää sisään vain @${domain}-osoitteella. Henkilökohtainen Gmail ei kelpaa. Vaihda tiliä ja yritä uudelleen, tai pyydä lippukunnan osoitetta pestijohtajalta.`;
   return 'Kirjautuminen ei onnistunut. Yritä hetken kuluttua uudelleen.';
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string | string[] }> }) {
   // The same test `/` applies, not merely "is there a session". With the cookie
-  // shared across pitva.fi, a session minted on Klapi identifies someone Budu's
+  // shared across pitva.fi, a session minted on Klapi identifies someone Tukki's
   // domain fence still refuses, and `session()` marks that by leaving `user.id`
   // unset. Redirecting on the weaker test sent those sessions back to `/`,
   // which sent them here again — an endless 307 loop, escapable only by signing

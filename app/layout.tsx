@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Budu',
+  title: 'Tukki',
   description: 'Lippukunnan talousarvio ja sen toteuma samalla sivulla.',
 };
 

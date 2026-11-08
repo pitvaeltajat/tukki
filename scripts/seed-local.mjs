@@ -2,7 +2,7 @@
  * Fills a local database with a plausible association year, so the dashboard
  * can be opened and judged on a real page rather than on a fixture.
  *
- * Pairs with BUDU_DEV_LOGIN (see lib/auth.ts): this writes the User row the
+ * Pairs with TUKKI_DEV_LOGIN (see lib/auth.ts): this writes the User row the
  * development sign-in then looks up. Nothing here talks to Kitsas — the entries
  * are invented, and the SyncRun row is what stops the page rendering its
  * "waiting for Kitsas" state over them.
@@ -21,8 +21,8 @@ if (!/@(localhost|127\.0\.0\.1)[:/]/.test(url)) {
 }
 
 const prisma = new PrismaClient();
-const EMAIL = process.env.BUDU_SEED_EMAIL || 'kehitys@pitkajarvenvaeltajat.fi';
-const YEAR = Number(process.env.BUDU_SEED_YEAR) || new Date().getUTCFullYear();
+const EMAIL = process.env.TUKKI_SEED_EMAIL || process.env.BUDU_SEED_EMAIL || 'kehitys@pitkajarvenvaeltajat.fi';
+const YEAR = Number(process.env.TUKKI_SEED_YEAR || process.env.BUDU_SEED_YEAR) || new Date().getUTCFullYear();
 const day = (year, month, date) => new Date(Date.UTC(year, month - 1, date));
 
 /** Deterministic, so two runs produce the same page and a screenshot can be compared to the last one. */

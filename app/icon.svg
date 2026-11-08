@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <!--
     Tapahtumamanageri's mark: a calendar with one highlighted event.
-    It uses the same Pitva service palette as Budu and Klapi, with the amber
+    It uses the same Pitva service palette as Tukki and Klapi, with the amber
     event dot as the small-size focal point.
   -->
   <rect width="32" height="32" rx="7" fill="#221e5c"/>

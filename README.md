@@ -1,4 +1,4 @@
-# Budu
+# Tukki
 
 Realtime budget tracking: upload a planned budget, then compare it with read-only realized expenses copied from Kitsas.
 
@@ -13,26 +13,26 @@ The included Postgres container is exposed at `127.0.0.1:5436`, so it can run al
 
 ### Signing in without Google
 
-Google OAuth cannot be exercised against a throwaway local database, which leaves the dashboard — the whole app — unreachable from a laptop. Setting `BUDU_DEV_LOGIN=1` in `.env.local` adds a second sign-in to `/login` that takes an email address and no password:
+Google OAuth cannot be exercised against a throwaway local database, which leaves the dashboard — the whole app — unreachable from a laptop. Setting `TUKKI_DEV_LOGIN=1` in `.env.local` adds a second sign-in to `/login` that takes an email address and no password:
 
 ```
-BUDU_DEV_LOGIN="1"
+TUKKI_DEV_LOGIN="1"
 node --env-file=.env.local scripts/seed-local.mjs   # writes the user it signs in as
 ```
 
 The seed fills the database with two years of a plausible association: sections, income and expense lines, an unmapped account or two, and enough bookings for the comparison column and the per-line chart to have something to draw. It refuses to run against anything but `localhost`, and it deletes budgets — never point it at production.
 
-The sign-in itself is gated twice: `NODE_ENV !== 'production'`, which `next build` fixes for any deploy, **and** the explicit `BUDU_DEV_LOGIN`. When either gate is closed the provider is not registered at all, so there is no endpoint to probe. See `devLoginEnabled` in `lib/auth.ts`.
+The sign-in itself is gated twice: `NODE_ENV !== 'production'`, which `next build` fixes for any deploy, **and** the explicit `TUKKI_DEV_LOGIN`. When either gate is closed the provider is not registered at all, so there is no endpoint to probe. See `devLoginEnabled` in `lib/auth.ts`.
 
 ## Who sees what
 
-Budu tracks **one talousarvio at a time, shared by the whole organisation**. Every signed-in user sees the same budget on the dashboard; nothing is scoped per user. Sign-in is already restricted to `GOOGLE_WORKSPACE_DOMAIN` (enforced on Google’s `hd` claim, not the email suffix), so holding a valid session _is_ the membership check. `Budget.createdById` records who uploaded a budget and is not an access control.
+Tukki tracks **one talousarvio at a time, shared by the whole organisation**. Every signed-in user sees the same budget on the dashboard; nothing is scoped per user. Sign-in is already restricted to `GOOGLE_WORKSPACE_DOMAIN` (enforced on Google’s `hd` claim, not the email suffix), so holding a valid session _is_ the membership check. `Budget.createdById` records who uploaded a budget and is not an access control.
 
 Changing that shared budget is restricted to admins:
 
-| Variable            | Meaning                                                                                                                                                                                                                                                                    |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BUDU_ADMIN_EMAILS` | Comma-separated emails allowed to import, edit and delete the talousarvio. **Unset means every signed-in user is an admin**, which is what Budu did before the setting existed — the domain restriction still applies, so the widest this gets is the organisation itself. |
+| Variable             | Meaning                                                                                                                                                                                                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TUKKI_ADMIN_EMAILS` | Comma-separated emails allowed to import, edit and delete the talousarvio. **Unset means every signed-in user is an admin**, which is what Tukki did before the setting existed — the domain restriction still applies, so the widest this gets is the organisation itself. |
 
 Admins get `/admin`, where the talousarvio is imported or replaced, rows are reclassified between meno and tulo, planned amounts are corrected, and a row's Kitsas account is remapped. The dashboard itself is read-only for everyone, admins included. Reading realized expenses from Kitsas (`POST /api/kitsas/sync`) stays open to any signed-in user, because it fetches bookings rather than changing the budget.
 
@@ -42,7 +42,7 @@ Two rows may not map the same Kitsas account. That is not a double count but a s
 
 ## Budget file format
 
-The first worksheet in a `.csv`, `.xls`, or `.xlsx` file is imported. Budu supports both a simple header-row format and the multi-year Finnish Talousarvio layout.
+The first worksheet in a `.csv`, `.xls`, or `.xlsx` file is imported. Tukki supports both a simple header-row format and the multi-year Finnish Talousarvio layout.
 
 For the simple format, use these headers:
 
@@ -63,7 +63,7 @@ The dashboard's year tabs link to `/?talousarvio=<id>`. A closed period is drawn
 
 Reclassifying a row between meno and tulo on `/admin` costs nothing beyond the write — see "Bookings are not budget-shaped" below.
 
-For the Talousarvio layout, Budu identifies the rightmost year (for example `2026`), reads account rows from `tilinumero`/column B, and treats that account number as the Kitsas match key. The optional "Vuosi" field on the import form picks a different column instead, which is how a closed year is brought in for comparison from the same file the current one came from. A year appearing twice in the header is that year's plan followed by its outturn; the **first** of the two is taken, because a talousarvio is the plan. Headings in the sheet are ignored: section names and their order are fixed in `lib/budget-sections.ts`, keyed by account-number range, because the association's budget has a settled shape and the account number is the single source of truth. An account outside every stated range is kept and shown under "Muut erät" rather than dropped. `pnpm test:sections` checks the ranges do not overlap and that known accounts land where the budget expects. Rows with an empty budget amount are imported as €0, so matching remains complete.
+For the Talousarvio layout, Tukki identifies the rightmost year (for example `2026`), reads account rows from `tilinumero`/column B, and treats that account number as the Kitsas match key. The optional "Vuosi" field on the import form picks a different column instead, which is how a closed year is brought in for comparison from the same file the current one came from. A year appearing twice in the header is that year's plan followed by its outturn; the **first** of the two is taken, because a talousarvio is the plan. Headings in the sheet are ignored: section names and their order are fixed in `lib/budget-sections.ts`, keyed by account-number range, because the association's budget has a settled shape and the account number is the single source of truth. An account outside every stated range is kept and shown under "Muut erät" rather than dropped. `pnpm test:sections` checks the ranges do not overlap and that known accounts land where the budget expects. Rows with an empty budget amount are imported as €0, so matching remains complete.
 
 ## Kitsas safety contract
 
@@ -74,7 +74,7 @@ The integration makes only `GET` requests to the legacy voucher endpoints:
 - `GET /viennit?alkupvm=…&loppupvm=…`
 - `GET /liitteet?alkupvm=…&loppupvm=…`
 
-It has no methods capable of posting, editing, or deleting anything in Kitsas. Budu stores its own copy of the matched voucher entries in PostgreSQL, both sides of each.
+It has no methods capable of posting, editing, or deleting anything in Kitsas. Tukki stores its own copy of the matched voucher entries in PostgreSQL, both sides of each.
 
 Kitsas exposes two hosts, and they are not interchangeable:
 
@@ -83,7 +83,7 @@ Kitsas exposes two hosts, and they are not interchangeable:
 | KitsasHub (`api.kitsas.fi`, test `test-api.kitsas.fi`) | `KITSAS_HUB_*`                                                 | Login, books, accounts, dimensions, fiscal years                      |
 | Legacy per-book cloud backend                          | resolved at runtime; `KITSAS_CLOUD_ID`, `KITSAS_EXPENSES_PATH` | `GET /init`, `/tositteet`, `/tositteet/{id}`, `/viennit`, `/liitteet` |
 
-The documented Hub API has no voucher read endpoint — only `POST /v1/vouchers`, which Budu never calls. Realized-expense ingestion therefore uses the legacy cloud backend, which Kitsas confirmed is alive and usable.
+The documented Hub API has no voucher read endpoint — only `POST /v1/vouchers`, which Tukki never calls. Realized-expense ingestion therefore uses the legacy cloud backend, which Kitsas confirmed is alive and usable.
 
 The cloud URL and token are **not** configured by hand. `lib/kitsas-cloud.ts` resolves them at runtime: `POST {hub}/login` with `KITSAS_HUB_USERNAME`/`KITSAS_HUB_PASSWORD` returns `clouds[]`, each entry carrying `id` (the cloudid), `url`, and `token`. `KITSAS_CLOUD_ID` selects a specific book when the user has several; otherwise the first active cloud wins. The resolved token is cached in memory for ten minutes, since the compatibility login response documents no lifetime.
 
@@ -95,13 +95,13 @@ That login is the integration's only non-`GET` request, and it is authentication
 
 Confirmed against a test book on 2026-08-24, and against the live book on 2026-08-31. `GET /tositteet?alkupvm=…&loppupvm=…` returns list items of `{id, pvm, tyyppi, tila, tunniste, otsikko, summa}`; the per-entry account breakdown requires `GET /tositteet/{id}`, whose `viennit[]` entries carry:
 
-| Field              | Type                | Note                                                                          |
-| ------------------ | ------------------- | ----------------------------------------------------------------------------- |
-| `id`               | number              | Unique per book, not per voucher; Budu keys on `{voucherId}:{entryId}` anyway |
-| `tili`             | number              | Account number                                                                |
-| `debet` / `kredit` | decimal **string**  | Only one of the two is present; the other is absent, not zero                 |
-| `pvm`              | `YYYY-MM-DD` string | Per entry, falling back to the voucher's `pvm`                                |
-| `selite`           | string              | Entry description                                                             |
+| Field              | Type                | Note                                                                           |
+| ------------------ | ------------------- | ------------------------------------------------------------------------------ |
+| `id`               | number              | Unique per book, not per voucher; Tukki keys on `{voucherId}:{entryId}` anyway |
+| `tili`             | number              | Account number                                                                 |
+| `debet` / `kredit` | decimal **string**  | Only one of the two is present; the other is absent, not zero                  |
+| `pvm`              | `YYYY-MM-DD` string | Per entry, falling back to the voucher's `pvm`                                 |
+| `selite`           | string              | Entry description                                                              |
 
 Amounts arriving as strings is why `asNumber` in the sync route parses rather than casts. A debit-side entry has no `kredit` key at all, so the unused side parses as `NaN` and is recorded as zero. What keeps the bank contra entry out of the totals is the account filter: 1900 is not a budget account, so no line maps to it and it is never stored.
 
@@ -165,4 +165,4 @@ The sync still consults the budget for two things only — which date ranges to 
 
 ## Vercel
 
-Budu is linked to the `pitvaeltajats-projects/budu` Vercel project. Klapi’s Google OAuth client ID and secret were copied to Budu’s production, preview, and development environments. Budu has its own generated `AUTH_SECRET`; Klapi’s database URL and AWS credentials were intentionally not copied.
+Tukki is linked to the `pitvaeltajats-projects/budu` Vercel project. Klapi’s Google OAuth client ID and secret were copied to Tukki’s production, preview, and development environments. Tukki has its own generated `AUTH_SECRET`; Klapi’s database URL and AWS credentials were intentionally not copied.
