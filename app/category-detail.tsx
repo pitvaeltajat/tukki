@@ -112,6 +112,15 @@ export function CategoryDetail(props: CategoryDetailProps) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const totalDays = Math.max(1, dayOffset(periodEnd, periodStart));
   const currentSeries = cumulative(props.current, periodStart);
   const previousSeries = cumulative(props.previous, previousStart);

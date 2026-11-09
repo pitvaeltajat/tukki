@@ -411,7 +411,9 @@ function Dashboard({
    * label — so the same four strings are read twice, and a closed period must
    * not be able to say "Tänä vuonna" in the header and "Kaudella" on the card.
    *
-   * "Viime vuonna" is always the whole of last year: a line booked late in the
+   * The live figures sit together first — arvio, toteutunut and jäljellä — so
+   * the eye can answer "where are we now?" without crossing the historical
+   * comparison columns. "Viime vuonna" is always the whole of last year: a line booked late in the
    * year, like the calendar sale, would otherwise read 0 € all autumn. An open
    * period adds last year up to today beside it for the like-for-like view; a
    * closed one has no need, because both would be the same full year.
@@ -478,26 +480,6 @@ function Dashboard({
           olisi liikkunut, vaan kirjanpito on aloitettu Kitsaassa myöhemmin.
         </p>
       )}
-      <section className="summary">
-        <div className="card">
-          <span className="label">Menoarvio</span>
-          <strong>{money(planned, budget.currency)}</strong>
-        </div>
-        <div className="card">
-          <span className="label">Tuloarvio</span>
-          <strong>{money(incomePlanned, budget.currency)}</strong>
-        </div>
-        <div className="card">
-          <span className="label">Toteutuneet menot</span>
-          <strong>{awaitingKitsas ? <Pending wide /> : money(actual, budget.currency)}</strong>
-        </div>
-        <div className="card">
-          <span className="label">Menoarviota jäljellä</span>
-          <strong className={awaitingKitsas ? undefined : remaining < 0 ? 'negative' : 'positive'}>
-            {awaitingKitsas ? <Pending wide /> : money(remaining, budget.currency)}
-          </strong>
-        </div>
-      </section>
       <Overview
         currency={budget.currency}
         awaiting={awaitingKitsas}
@@ -533,9 +515,9 @@ function Dashboard({
                 <th>Kohta</th>
                 <th className="right">{columns.planned}</th>
                 <th className="right">{columns.used}</th>
+                <th className="right">{columns.remaining}</th>
                 {!closed && <th className="right">{columns.priorToDate}</th>}
                 <th className="right">{columns.prior}</th>
-                <th className="right">{columns.remaining}</th>
               </tr>
             </thead>
             <tbody>
@@ -582,6 +564,12 @@ function Dashboard({
                         <td className="right" data-label={columns.used}>
                           {awaitingKitsas ? <Pending /> : money(used, budget.currency)}
                         </td>
+                        <td
+                          className={`right${status?.tone === 'over' ? ' negative' : ''}`}
+                          data-label={columns.remaining}
+                        >
+                          {awaitingKitsas ? <Pending /> : money(line.plannedCents - used, budget.currency)}
+                        </td>
                         {!closed && (
                           <td className="right" data-label={columns.priorToDate}>
                             {awaitingKitsas ? <Pending /> : money(prior, budget.currency)}
@@ -589,12 +577,6 @@ function Dashboard({
                         )}
                         <td className="right" data-label={columns.prior}>
                           {awaitingKitsas ? <Pending /> : money(priorFull, budget.currency)}
-                        </td>
-                        <td
-                          className={`right${status?.tone === 'over' ? ' negative' : ''}`}
-                          data-label={columns.remaining}
-                        >
-                          {awaitingKitsas ? <Pending /> : money(line.plannedCents - used, budget.currency)}
                         </td>
                       </tr>
                     );
@@ -613,14 +595,6 @@ function Dashboard({
                         <td className="right" data-label={columns.used}>
                           {awaitingKitsas ? <Pending /> : money(total.usedCents, budget.currency)}
                         </td>
-                        {!closed && (
-                          <td className="right" data-label={columns.priorToDate}>
-                            {awaitingKitsas ? <Pending /> : money(total.priorCents, budget.currency)}
-                          </td>
-                        )}
-                        <td className="right" data-label={columns.prior}>
-                          {awaitingKitsas ? <Pending /> : money(total.priorFullCents, budget.currency)}
-                        </td>
                         <td
                           className={`right${
                             !awaitingKitsas && total.kind === 'EXPENSE' && total.usedCents > total.plannedCents
@@ -630,6 +604,14 @@ function Dashboard({
                           data-label={columns.remaining}
                         >
                           {awaitingKitsas ? <Pending /> : money(total.plannedCents - total.usedCents, budget.currency)}
+                        </td>
+                        {!closed && (
+                          <td className="right" data-label={columns.priorToDate}>
+                            {awaitingKitsas ? <Pending /> : money(total.priorCents, budget.currency)}
+                          </td>
+                        )}
+                        <td className="right" data-label={columns.prior}>
+                          {awaitingKitsas ? <Pending /> : money(total.priorFullCents, budget.currency)}
                         </td>
                       </tr>
                     ))}

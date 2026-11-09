@@ -242,18 +242,6 @@ h2 {
   color: var(--foreground);
   box-shadow: 0 1px 2px rgb(34 30 93 / 7%);
 }
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin: 28px 0 16px;
-}
-.summary strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 28px;
-  letter-spacing: -0.8px;
-}
 .label {
   color: var(--muted-foreground);
   font-size: 13px;
@@ -468,15 +456,6 @@ select:focus-visible {
   outline-offset: 2px;
 }
 @media (max-width: 980px) {
-  /*
-   * minmax(0, …) rather than a bare 1fr: a grid track will not shrink below its
-   * content's minimum width by default, and "Menoarviota jäljellä" over an
-   * unbreakable "9 346,00 €" was wide enough to push the pair past the screen
-   * and give the whole page a horizontal scrollbar.
-   */
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 @media (max-width: 760px) {
   .grid {
@@ -489,11 +468,6 @@ select:focus-visible {
     font-size: 30px;
   }
 }
-/*
- * Phones. The four summary tiles deliberately stay two-abreast rather than
- * collapsing to one: they are a label and a number each, and stacking them
- * spends most of a phone screen restating what fits in half of it.
- */
 @media (max-width: 560px) {
   /* 16px gutter, as Klapi keeps on phones, so the page lines up under the bar. */
   .shell {
@@ -520,15 +494,6 @@ select:focus-visible {
   .card {
     padding: 16px;
   }
-  .summary {
-    gap: 10px;
-    margin: 20px 0 12px;
-  }
-  .summary strong {
-    margin-top: 4px;
-    font-size: 21px;
-    letter-spacing: -0.4px;
-  }
   h1 {
     font-size: 26px;
     letter-spacing: -0.8px;
@@ -542,9 +507,6 @@ select:focus-visible {
 @media (max-width: 380px) {
   .card {
     padding: 14px;
-  }
-  .summary strong {
-    font-size: 18px;
   }
 }
 /*
@@ -648,6 +610,7 @@ select:focus-visible {
   background: var(--card);
   color: var(--foreground);
   padding: 0;
+  overscroll-behavior: contain;
   box-shadow: 0 12px 40px rgb(34 30 93 / 22%);
 }
 .modal::backdrop {
@@ -656,6 +619,7 @@ select:focus-visible {
 .modal-body {
   padding: 30px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   max-height: min(1118px, calc(100vh - 48px));
 }
 .modal-summary {
