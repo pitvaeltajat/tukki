@@ -30,13 +30,24 @@ Tukki tracks **one talousarvio at a time, shared by the whole organisation**. Ev
 
 Changing that shared budget is restricted to admins:
 
-| Variable             | Meaning                                                                                                                                                                                                                                                                     |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TUKKI_ADMIN_EMAILS` | Comma-separated emails allowed to import, edit and delete the talousarvio. **Unset means every signed-in user is an admin**, which is what Tukki did before the setting existed — the domain restriction still applies, so the widest this gets is the organisation itself. |
+| Variable             | Meaning                                                                                                                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TUKKI_ADMIN_EMAILS` | Transitional bootstrap only. Existing listed users become admins on their first request after the role migration; ongoing admin membership is stored in the database and managed from `/admin`. |
 
 Admins get `/admin`, where the talousarvio is imported or replaced, rows are reclassified between meno and tulo, planned amounts are corrected, and a row's Kitsas account is remapped. The dashboard itself is read-only for everyone, admins included. Reading realized expenses from Kitsas (`POST /api/kitsas/sync`) stays open to any signed-in user, because it fetches bookings rather than changing the budget.
 
 The live budget is the one whose **period contains today**; `updatedAt` is only the tiebreak when no period does. Only an import or an admin edit moves `updatedAt`; a Kitsas sync writes expenses, sync runs and voucher state but never the budget row, so the nightly cron cannot change which budget is on screen. See `lib/budget-period.ts`.
+
+### Google Workspace user sync
+
+The nightly `/api/cron/sync-workspace-users` job reconciles Tukki's local users with the configured Workspace group. It provisions active members before they first sign in, refreshes names, restores accounts it previously deactivated, and soft-deactivates members who are suspended, archived, deleted, or removed from the group. Local admin roles are preserved. It refuses an empty roster, aborts if too many users would be deactivated, and never deactivates the last live admin.
+
+The cron requires a service-account key with domain-wide delegation for the read-only user and group-member Directory API scopes. Set `GOOGLE_WORKSPACE_SA_KEY`, `GOOGLE_WORKSPACE_SUBJECT`, `GOOGLE_WORKSPACE_DOMAIN`, `GOOGLE_WORKSPACE_GROUP`, `GOOGLE_WORKSPACE_EXCLUDE`, and optionally `WORKSPACE_SYNC_MAX_DEACTIVATIONS` in the deployment environment. Verify setup without writing with:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "https://<host>/api/cron/sync-workspace-users?dryRun=1"
+```
 
 Two rows may not map the same Kitsas account. That is not a double count but a silent loss: the dashboard joins bookings through a map keyed by account number, so the second row to claim one replaces the first and the other stops receiving anything. Saving a changed mapping also drops that budget's sync runs, because the newly mapped accounts were discarded by every earlier sync and have to be fetched again.
 

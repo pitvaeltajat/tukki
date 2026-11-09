@@ -19,6 +19,8 @@ model User {
   image     String?
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
+  deletedAt DateTime?
+  deletedBySync Boolean @default(false)
   budgets   Budget[]
 }
 

@@ -163,7 +163,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               // Signs in as an existing row only. Seeding is the seed script's
               // job, so a typo fails the login instead of quietly creating a
               // second account that owns nothing.
-              return await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, name: true } });
+              const user = await prisma.user.findUnique({
+                where: { email },
+                select: { id: true, email: true, name: true, deletedAt: true },
+              });
+              if (!user || user.deletedAt) return null;
+              return { id: user.id, email: user.email, name: user.name };
             },
           }),
         ]
@@ -174,6 +179,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === 'dev') return devLoginEnabled;
       if (account?.provider !== 'google' || !user.email) return false;
       const email = user.email.toLowerCase();
+      const existing = await prisma.user.findUnique({ where: { email }, select: { deletedAt: true } });
+      if (existing?.deletedAt) return false;
       if (profile && profile.email_verified === false) return false;
       if (allowedDomains.length) {
         const hd = typeof profile?.hd === 'string' ? profile.hd.trim().toLowerCase() : null;
@@ -198,7 +205,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // keeps its users in a different database. A bare `userId` claim had the
       // two apps overwriting each other's primary keys on every request.
       if (token.email) {
-        token.tukkiUserId = (await prisma.user.findUnique({ where: { email: token.email } }))?.id;
+        const user = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { id: true, deletedAt: true },
+        });
+        token.tukkiUserId = user?.deletedAt ? undefined : user?.id;
       }
       return token;
     },
@@ -234,15 +245,20 @@ async function promoteLegacyAdmin(userId: string, email?: string | null) {
   // the migration lands without any configured legacy admin, let the first
   // authenticated account claim the empty role set so the app cannot lock
   // everyone out before the admin list is configured in the UI.
-  const isFirstAccount = adminCount === 0 && legacyAdminEmails.length === 0;
+  if (adminCount > 0) return false;
   const isLegacyAdmin = Boolean(email && legacyAdminEmails.includes(email.trim().toLowerCase()));
-  if (!isFirstAccount && !isLegacyAdmin) return false;
-  await prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } });
+  if (legacyAdminEmails.length > 0 && !isLegacyAdmin) return false;
+  if (legacyAdminEmails.length > 0) {
+    await prisma.user.updateMany({ where: { email: { in: legacyAdminEmails } }, data: { role: 'ADMIN' } });
+  } else {
+    await prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } });
+  }
   return true;
 }
 
 export async function isAdmin(userId: string, email?: string | null) {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, deletedAt: true } });
+  if (user?.deletedAt) return false;
   if (user?.role === 'ADMIN') return true;
   return promoteLegacyAdmin(userId, email);
 }

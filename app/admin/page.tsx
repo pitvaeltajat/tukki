@@ -74,6 +74,7 @@ export default async function AdminPage({
     },
   });
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     orderBy: [{ role: 'asc' }, { name: 'asc' }, { email: 'asc' }],
     select: { id: true, name: true, email: true, role: true },
   });

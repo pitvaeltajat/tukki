@@ -21,9 +21,10 @@ export async function changeUserRole(_previous: AdminState, formData: FormData):
   const userId = String(formData.get('userId') ?? '');
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, deletedAt: true },
   });
   if (!user) return { error: 'Käyttäjää ei löytynyt.' };
+  if (user.deletedAt) return { error: 'Inaktiivista käyttäjää ei voi muuttaa.' };
 
   const nextRole: AdminRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
   const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
