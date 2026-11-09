@@ -899,19 +899,6 @@ select:focus-visible {
   grid-template-columns: repeat(2, 1fr);
   gap: 16px 28px;
 }
-.overview-subhead {
-  margin: 22px 0 12px;
-  color: var(--foreground);
-  font-size: 15px;
-}
-.overview-alerts {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 28px;
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
-}
 .overview-row-head {
   display: flex;
   flex-wrap: wrap;
@@ -931,6 +918,21 @@ select:focus-visible {
 }
 .meter {
   margin: 8px 0 6px;
+}
+.budget-line-meter {
+  width: min(100%, 360px);
+  margin-top: 8px;
+}
+.budget-line-meter .meter {
+  margin: 0;
+}
+.meter-compact .meter-track {
+  height: 7px;
+}
+.meter-compact .meter-now,
+.meter-compact .meter-plan {
+  top: -2px;
+  bottom: -2px;
 }
 .meter-track {
   position: relative;
@@ -1000,8 +1002,7 @@ select:focus-visible {
   opacity: 0.6;
 }
 @media (max-width: 860px) {
-  .overview-totals,
-  .overview-alerts {
+  .overview-totals {
     grid-template-columns: 1fr;
   }
 }

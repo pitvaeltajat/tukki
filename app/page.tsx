@@ -7,11 +7,11 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import type { Prisma } from '@prisma/client';
-import { summarisePace } from '@/lib/budget-pace';
+import { paceFraction, summarisePace } from '@/lib/budget-pace';
 import { sectionsOf, worthTotalling } from '@/lib/budget-groups';
 import { AttachmentLinks } from './attachment-links';
 import { CategoryDetail, type CategoryDetailProps } from './category-detail';
-import { Overview } from './overview';
+import { BudgetMeter, Overview } from './overview';
 import { KitsasPending, Pending } from './kitsas-pending';
 import { PeriodSwitcher, type Period } from './period-switcher';
 import { KompassiLink, PitvaMark } from './pitva-logo';
@@ -503,8 +503,6 @@ function Dashboard({
         awaiting={awaitingKitsas}
         expense={{ usedCents: actual, plannedCents: planned, expectedCents: pace.expectedExpenseCents }}
         income={{ usedCents: incomeActual, plannedCents: incomePlanned, expectedCents: pace.expectedIncomeCents }}
-        alerts={pace.alerts}
-        details={detailsByCategory}
       />
       <div className="actions">
         {admin && (
@@ -555,6 +553,9 @@ function Dashboard({
                     const prior = previousByCategory.get(line.category) || 0;
                     const priorFull = previousFullByCategory.get(line.category) || 0;
                     const status = awaitingKitsas ? null : rowStatus(line.kind, line.plannedCents, used, prior);
+                    const expected = Math.round(
+                      line.plannedCents * paceFraction(prior, priorFull, elapsedDays, totalDays),
+                    );
                     return (
                       <tr key={line.id}>
                         <td>
@@ -565,6 +566,15 @@ function Dashboard({
                             {line.kitsasAccount ? ` · tili ${line.kitsasAccount}` : ''}
                           </span>
                           {status && <span className={`badge badge-${status.tone}`}>{status.label}</span>}
+                          {!awaitingKitsas && (
+                            <div className="budget-line-meter" aria-label="Toteutuma suhteessa arvioon">
+                              <BudgetMeter
+                                compact
+                                tone={status?.tone ?? 'good'}
+                                totals={{ usedCents: used, plannedCents: line.plannedCents, expectedCents: expected }}
+                              />
+                            </div>
+                          )}
                         </td>
                         <td className="right" data-label={columns.planned}>
                           {money(line.plannedCents, budget.currency)}
