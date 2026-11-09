@@ -165,4 +165,4 @@ The sync still consults the budget for two things only — which date ranges to 
 
 ## Vercel
 
-Tukki is linked to the `pitvaeltajats-projects/budu` Vercel project. Klapi’s Google OAuth client ID and secret were copied to Tukki’s production, preview, and development environments. Tukki has its own generated `AUTH_SECRET`; Klapi’s database URL and AWS credentials were intentionally not copied.
+Tukki is linked to the `pitvaeltajats-projects/tukki` Vercel project. Klapi’s Google OAuth client ID and secret were copied to Tukki’s production, preview, and development environments. Tukki has its own generated `AUTH_SECRET`; Klapi’s database URL and AWS credentials were intentionally not copied.
