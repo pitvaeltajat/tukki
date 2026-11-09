@@ -31,9 +31,12 @@
 }
 html {
   background: var(--background);
+  overflow-x: hidden;
 }
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family:
@@ -84,6 +87,7 @@ button:hover {
   height: 64px;
   margin: 0 auto;
   padding: 0 16px;
+  min-width: 0;
 }
 /*
  * The wordmark and the way back out. Grouped so the topbar's space-between
@@ -96,6 +100,7 @@ button:hover {
   flex: none;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 /*
  * Deliberately quieter than the wordmark: this is the exit, not the identity.
@@ -250,6 +255,9 @@ h2 {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
   gap: 16px;
+}
+.grid > * {
+  min-width: 0;
 }
 .section-head {
   display: flex;
