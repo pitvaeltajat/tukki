@@ -14,7 +14,7 @@ import { CategoryDetail, type CategoryDetailProps } from './category-detail';
 import { Overview } from './overview';
 import { KitsasPending, Pending } from './kitsas-pending';
 import { PeriodSwitcher, type Period } from './period-switcher';
-import { AtkLink, PitvaMark } from './pitva-logo';
+import { KompassiLink, PitvaMark } from './pitva-logo';
 
 const money = (cents: number, currency = 'EUR') =>
   new Intl.NumberFormat('fi-FI', { style: 'currency', currency }).format(cents / 100);
@@ -101,7 +101,7 @@ export default async function Home({
               <PitvaMark />
               TUKKI
             </Link>
-            <AtkLink />
+            <KompassiLink />
           </div>
           <div className="user">
             {admin && <Link href="/admin">Ylläpito</Link>}

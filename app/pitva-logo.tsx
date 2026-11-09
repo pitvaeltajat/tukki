@@ -88,13 +88,13 @@ export function PitvaLogo({ size = 116, title }: { size?: number; title?: string
 }
 
 /**
- * The way back to atk.pitva.fi, the front door that issued this session. A pill
+ * The way back to kompassi.pitva.fi, the front door that issued this session. A pill
  * with Lucide's LayoutGrid, as Klapi draws it: "all services", not "back". A
  * plain <a> and not next/link, because it leaves the app for another origin.
  */
-export function AtkLink() {
+export function KompassiLink() {
   return (
-    <a className="uplink" href="https://atk.pitva.fi" title="Kaikki PitVan palvelut">
+    <a className="uplink" href="https://kompassi.pitva.fi" title="Kaikki PitVan palvelut">
       <svg
         viewBox="0 0 24 24"
         width="13"
@@ -112,7 +112,7 @@ export function AtkLink() {
         <rect width="7" height="7" x="14" y="14" rx="1" />
         <rect width="7" height="7" x="3" y="14" rx="1" />
       </svg>
-      ATK
+      Kompassi
     </a>
   );
 }
