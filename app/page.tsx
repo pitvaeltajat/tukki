@@ -1,4 +1,4 @@
-import { auth, isAdminEmail, signOut } from '@/lib/auth';
+import { auth, isAdmin, signOut } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { activeBudgetOrder, activeFirst } from '@/lib/budget';
 import { realizedCents } from '@/lib/realized';
@@ -29,7 +29,7 @@ export default async function Home({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
-  const admin = isAdminEmail(session.user.email);
+  const admin = await isAdmin(session.user.id, session.user.email);
   /**
    * The shared talousarviot, live period first; see lib/budget.ts for why this
    * is not scoped to the viewer. `?talousarvio=` opens a closed year instead of

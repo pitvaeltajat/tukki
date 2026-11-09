@@ -172,8 +172,8 @@ const monthsSoFar = YEAR === new Date().getUTCFullYear() ? new Date().getUTCMont
 
 const user = await prisma.user.upsert({
   where: { email: EMAIL },
-  update: {},
-  create: { email: EMAIL, name: 'Kehityskäyttäjä' },
+  update: { role: 'ADMIN' },
+  create: { email: EMAIL, name: 'Kehityskäyttäjä', role: 'ADMIN' },
 });
 
 // Wholesale replacement, so a re-run is a clean reseed rather than a second copy.

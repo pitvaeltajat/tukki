@@ -7,10 +7,33 @@ import { typedEuroCents } from '@/lib/euro';
 import { duplicateAccounts, parseAccount, INVALID_ACCOUNT } from '@/lib/budget-mapping';
 import { kitsasIsConfigured } from '@/lib/kitsas';
 import { syncAllBudgets } from '@/lib/kitsas-sync';
+import { canChangeRole, type AdminRole } from '@/lib/admin-roles';
 
 export type AdminState = { ok?: string; error?: string };
 
 const KINDS = new Set(['EXPENSE', 'INCOME']);
+
+/** Toggles an existing signed-in user's Tukki role. */
+export async function changeUserRole(_previous: AdminState, formData: FormData): Promise<AdminState> {
+  const { session, error } = await adminSession();
+  if (error || !session) return { error };
+
+  const userId = String(formData.get('userId') ?? '');
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+  if (!user) return { error: 'Käyttäjää ei löytynyt.' };
+
+  const nextRole: AdminRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+  const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
+  if (!canChangeRole(user.role, nextRole, adminCount)) return { error: 'Viimeistä ylläpitäjää ei voi alentaa.' };
+
+  await prisma.user.update({ where: { id: user.id }, data: { role: nextRole } });
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { ok: `${user.name || user.email} on nyt ${nextRole === 'ADMIN' ? 'ylläpitäjä' : 'tavallinen käyttäjä'}.` };
+}
 
 /**
  * Saves the talousarvio's name and its rows' planned amounts and meno/tulo

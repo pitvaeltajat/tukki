@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { auth, isAdminEmail } from '@/lib/auth';
+import { auth, isAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { activeBudgetOrder, activeFirst } from '@/lib/budget';
 import { BudgetEditor } from './budget-editor';
@@ -10,6 +10,7 @@ import { UnmappedAccounts } from './unmapped-accounts';
 import { KitsasRefetch } from './kitsas-refetch';
 import { PeriodSwitcher } from '../period-switcher';
 import { KompassiLink, PitvaMark } from '../pitva-logo';
+import { AdminUsers } from './users';
 
 /** The Kitsas button's server action runs here, and a sync of the whole book takes a while. */
 export const maxDuration = 300;
@@ -50,7 +51,7 @@ export default async function AdminPage({
     </>
   );
 
-  if (!isAdminEmail(session.user.email)) {
+  if (!(await isAdmin(session.user.id, session.user.email))) {
     return shell(
       <section className="setup">
         <p className="eyebrow">Ylläpito</p>
@@ -71,6 +72,10 @@ export default async function AdminPage({
       updatedAt: true,
       _count: { select: { lines: true } },
     },
+  });
+  const users = await prisma.user.findMany({
+    orderBy: [{ role: 'asc' }, { name: 'asc' }, { email: 'asc' }],
+    select: { id: true, name: true, email: true, role: true },
   });
   /**
    * The live period leads, as on the dashboard, but any of them can be opened
@@ -105,6 +110,8 @@ export default async function AdminPage({
       <h1>Talousarvion hallinta</h1>
       {selected && <PeriodSwitcher periods={periods} selectedId={selected.id} basePath="/admin" />}
       <p className="lede">Muutokset näkyvät heti kaikille yhdistyksen tunnuksille, jotka kirjautuvat Tukkiin.</p>
+
+      <AdminUsers users={users} />
 
       {selected ? (
         <BudgetEditor

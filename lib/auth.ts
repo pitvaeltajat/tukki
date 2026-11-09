@@ -216,23 +216,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 });
 
 /**
- * Emails allowed to change the shared talousarvio, comma-separated. Reading it
- * is open to everyone who can sign in, so this is the only gate left standing
- * on the write paths: import, edit and delete.
- *
- * An empty list leaves every signed-in user an admin, which is what Tukki did
- * before the list existed. That is not "open to anyone": `signIn` above already
- * turns away every account outside `GOOGLE_WORKSPACE_DOMAIN`, so the widest
- * this setting can get is the organisation itself.
+ * Legacy bootstrap only. Admin membership now lives on User.role. This list is
+ * read just long enough to promote an existing administrator during the first
+ * request after the role migration; it must not demote anyone or decide access
+ * after that promotion has been persisted.
  */
-const adminEmails = (process.env.TUKKI_ADMIN_EMAILS ?? process.env.BUDU_ADMIN_EMAILS ?? '')
+const legacyAdminEmails = (process.env.TUKKI_ADMIN_EMAILS ?? process.env.BUDU_ADMIN_EMAILS ?? '')
   .split(',')
   .map((entry) => entry.trim().toLowerCase())
   .filter(Boolean);
 
-export function isAdminEmail(email?: string | null) {
-  if (!adminEmails.length) return true;
-  return typeof email === 'string' && adminEmails.includes(email.toLowerCase());
+async function promoteLegacyAdmin(userId: string, email?: string | null) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (!user || user.role === 'ADMIN') return user?.role === 'ADMIN';
+  const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
+  // A blank legacy list used to mean every signed-in account was an admin. If
+  // the migration lands without any configured legacy admin, let the first
+  // authenticated account claim the empty role set so the app cannot lock
+  // everyone out before the admin list is configured in the UI.
+  const isFirstAccount = adminCount === 0 && legacyAdminEmails.length === 0;
+  const isLegacyAdmin = Boolean(email && legacyAdminEmails.includes(email.trim().toLowerCase()));
+  if (!isFirstAccount && !isLegacyAdmin) return false;
+  await prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } });
+  return true;
+}
+
+export async function isAdmin(userId: string, email?: string | null) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (user?.role === 'ADMIN') return true;
+  return promoteLegacyAdmin(userId, email);
 }
 
 /**
@@ -244,7 +256,7 @@ export function isAdminEmail(email?: string | null) {
 export async function adminSession() {
   const session = await auth();
   if (!session?.user?.id) return { session: null, error: 'Kirjautuminen vaaditaan.', status: 401 as const };
-  if (!isAdminEmail(session.user.email))
+  if (!(await isAdmin(session.user.id, session.user.email)))
     return { session: null, error: 'Vain ylläpitäjä voi muuttaa talousarviota.', status: 403 as const };
   return { session, error: null, status: 200 as const };
 }
